@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+TIME="10"
+URL="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+
+# emoji codes
+SUCCESS="\u2705"    # ✅
+FAILED="\u274C"     # ❌
+
+# SORTING THE INCOMING STATUS CODE
+if [[ $1 ]] 
+then
+	# if the incoming status is a success - 0 
+	if [[ $1 -eq 0 ]]
+	then
+		TG_CHAT_ID=$TELEGRAM_USER_ID # OK CHAT
+        STATUS_EMOJI=$SUCCESS
+	# if the incoming status fails - 1
+	elif [[ $1 -eq 1 ]]
+	then
+		TG_CHAT_ID=$TELEGRAM_USER_ID # ERR CHAT
+        STATUS_EMOJI=$FAILED
+	# invalid input argument
+	else
+		echo "the input argument must be 0 or 1"
+		exit 1
+	fi
+else
+	# no input argument
+	echo "requires input argument 0 or 1"
+	exit 1
+fi
+
+TEXT="Deploy status: `echo -e ${STATUS_EMOJI}`\
+%0A%0A\
+Deploy area:+${CI_JOB_NAME}\
+%0A%0A\
+Project:+${CI_PROJECT_NAME}\
+%0A\
+URL:+${CI_PROJECT_URL}/pipelines/${CI_PIPELINE_ID}/\
+%0A\
+Branch:+${CI_COMMIT_REF_SLUG}"
+
+curl -s --max-time $TIME -d "chat_id=${TG_CHAT_ID}&disable_web_page_preview=1&text=${TEXT}" $URL > /dev/null 2>&1
+exit 0
